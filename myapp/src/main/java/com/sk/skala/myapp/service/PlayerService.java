@@ -11,6 +11,8 @@ import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,24 +50,43 @@ public class PlayerService {
      * @return Player 플레이어 정보 (없을 경우 null)
      */
     public Player findPlayer(String id) {
-        return playerJpaRepository.findByPlayerId(id).orElse(null);
+        return playerJpaRepository.findByPlayerId(id)
+        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 플레이어 입니다."));
     }
 
     /**
+     * 플레이어 로그인 처리
+     * @param playerId
+     * @param playerPassword
+     * @return
+     */
+    public Player login(String playerId, String playerPassword){
+        Optional<Player> playerOpt = playerJpaRepository.findByPlayerId(playerId);
+
+        if (playerOpt.isPresent()){
+            Player player = playerOpt.get();
+
+            if (player.getPlayerPassword() != null && player.getPlayerPassword().equals(playerPassword)){
+                return player;
+            }
+        }
+        return null;
+    }
+    /**
      * 새로운 플레이어를 생성
      * @param playerId 플레이어 ID
-     * @param initialMoney 초기 자금
+     * @param playerPassword 플레이어 패스워드
+     * 
      * @return Player 생성된 플레이어 정보
      */
     @Transactional
-    public Player createNewPlayer(String playerId, int initialMoney) {
+    public Player createNewPlayer(String playerId, String playerPassword, int initialMoney) {
         // 이미 존재하는 플레이어 ID인지 확인
         if (playerJpaRepository.findByPlayerId(playerId).isPresent()) {
             throw new IllegalArgumentException("이미 존재하는 플레이어 ID입니다: " + playerId);
         }
         
-        Player player = new Player(playerId);
-        player.setPlayerMoney(initialMoney);
+        Player player = new Player(playerId, playerPassword, initialMoney);
         return playerJpaRepository.save(player);
     }
 

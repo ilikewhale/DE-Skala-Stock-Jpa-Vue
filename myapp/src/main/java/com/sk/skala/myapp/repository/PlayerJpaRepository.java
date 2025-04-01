@@ -19,4 +19,12 @@ public interface PlayerJpaRepository extends JpaRepository<Player, Long> {
      * @return Optional<Player> 플레이어 정보 (없을 경우 빈 Optional)
      */
     Optional<Player> findByPlayerId(String playerId);
+    
+    /**
+     * 플레이어 ID와 비밀번호로 플레이어 정보를 조회
+     * @param playerId 플레이어 ID
+     * @param playerPassword 플레이어 비밀번호
+     * @return Optional<Player> 플레이어 정보 (없을 경우 빈 Optional)
+     */
+    Optional<Player> findByPlayerIdAndPlayerPassword(String playerId, String playerPassword);
 }

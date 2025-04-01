@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 플레이어 관련 API 엔드포인트를 제공하는 REST 컨트롤러
@@ -41,15 +42,38 @@ public class PlayerController {
     }
 
     /**
+     * 플레이어 로그인
+     * @param loginRequest 로그인 요청 (playerId, playerPassword)
+     * @return 로그인 결과
+     */
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
+        String playerId = loginRequest.get("playerId");
+        String playerPassword = loginRequest.get("playerPassword");
+        
+        if (playerId == null || playerPassword == null) {
+            return ResponseEntity.badRequest().body("아이디와 비밀번호를 모두 입력해주세요.");
+        }
+        
+        Player player = playerService.login(playerId, playerPassword);
+        if (player != null) {
+            return ResponseEntity.ok(player);
+        } else {
+            return ResponseEntity.badRequest().body("로그인 실패: 아이디 또는 비밀번호가 올바르지 않습니다.");
+        }
+    }
+
+    /**
      * 새로운 플레이어 생성
-     * @param id 플레이어 ID
-     * @param money 초기 자금
+     * @param playerId 플레이어 ID
+     * @param playerPassword 플레이어 비밀번호
+     * @param playerMoney 초기 자금
      * @return 생성된 플레이어 정보
      */
     @PostMapping
-    public ResponseEntity<?> createPlayer(@RequestParam String id, @RequestParam int money) {
+    public ResponseEntity<?> createPlayer(@RequestParam String playerId, @RequestParam String playerPassword, @RequestParam int playerMoney) {
         try {
-            Player player = playerService.createNewPlayer(id, money);
+            Player player = playerService.createNewPlayer(playerId, playerPassword, playerMoney);
             return ResponseEntity.ok(player);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -58,18 +82,18 @@ public class PlayerController {
 
     /**
      * 플레이어 주식 구매
-     * @param id 플레이어 ID
+     * @param playerId 플레이어 ID
      * @param stockIndex 주식 인덱스 (ID)
      * @param quantity 구매 수량
      * @return 구매 결과 메시지
      */
-    @PostMapping("/{id}/buy")
+    @PostMapping("/{playerId}/buy")
     public ResponseEntity<String> buyStock(
-            @PathVariable String id,
+            @PathVariable String playerId,
             @RequestParam int stockIndex,
             @RequestParam int quantity) {
         
-        boolean success = playerService.buyStock(id, stockIndex, quantity);
+        boolean success = playerService.buyStock(playerId, stockIndex, quantity);
         if (success) {
             return ResponseEntity.ok("주식 구매 성공");
         } else {
@@ -79,18 +103,18 @@ public class PlayerController {
 
     /**
      * 플레이어 주식 판매
-     * @param id 플레이어 ID
+     * @param playerId 플레이어 ID
      * @param stockIndex 주식 인덱스 (목록 내 위치)
      * @param quantity 판매 수량
      * @return 판매 결과 메시지
      */
-    @PostMapping("/{id}/sell")
+    @PostMapping("/{playerId}/sell")
     public ResponseEntity<String> sellStock(
-            @PathVariable String id,
+            @PathVariable String playerId,
             @RequestParam int stockIndex,
             @RequestParam int quantity) {
         
-        boolean success = playerService.sellStock(id, stockIndex, quantity);
+        boolean success = playerService.sellStock(playerId, stockIndex, quantity);
         if (success) {
             return ResponseEntity.ok("주식 판매 성공");
         } else {
@@ -100,12 +124,12 @@ public class PlayerController {
 
     /**
      * 플레이어 보유 주식 목록 조회
-     * @param id 플레이어 ID
+     * @param playerId 플레이어 ID
      * @return 주식 목록 문자열
      */
-    @GetMapping("/{id}/stocks")
-    public ResponseEntity<String> getPlayerStocks(@PathVariable String id) {
-        String stocksDisplay = playerService.getPlayerStockDisplay(id);
+    @GetMapping("/{playerId}/stocks")
+    public ResponseEntity<String> getPlayerStocks(@PathVariable String playerId) {
+        String stocksDisplay = playerService.getPlayerStockDisplay(playerId);
         return ResponseEntity.ok(stocksDisplay);
     }
 }

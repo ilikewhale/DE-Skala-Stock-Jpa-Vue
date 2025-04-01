@@ -23,8 +23,12 @@ public class Player {
     @Column(name = "player_id", nullable = false, unique = true) // NULL이 될 수 없고 중복될 수 없음
     private String playerId; // 플레이어 식별 ID (사용자 입력용)
 
+    @Column(name = "player_password")
+    private String playerPassword; // 플레이어 식별 패스워드 (사용자 입력용)
+
     @Column(name = "player_money")
     private int playerMoney; // 플레이어가 보유한 돈
+
 
     // PlayerStock과 1:N 관계 설정, 플레이어가 삭제될 때 관련 주식 정보도 함께 삭제됨
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
@@ -32,11 +36,14 @@ public class Player {
     private List<PlayerStock> playerStocks = new ArrayList<>();
 
     /**
-     * 플레이어 생성자 - 기본 자금은 10000으로 설정
+     * 플레이어 생성자
      * @param playerId 플레이어 ID
+     * @param playerPassword  플레이어 비밀번호
+     * @param playerMoney 플레이어가 보유한 돈
      */
-    public Player(String playerId) {
+    public Player(String playerId, String playerPassword, int playerMoney) {
         this.playerId = playerId;
-        this.playerMoney = 10000;
+        this.playerPassword = playerPassword;
+        this.playerMoney = playerMoney;
     }
 }
