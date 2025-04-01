@@ -1,5 +1,6 @@
 package com.sk.skala.myapp.service;
 
+import com.sk.skala.myapp.dto.response.StockResponse;
 import com.sk.skala.myapp.model.Stock;
 import com.sk.skala.myapp.repository.StockJpaRepository;
 
@@ -76,14 +77,16 @@ public class StockService {
      * @param price 주식 가격
      */
     @Transactional
-    public void addStock(String name, int price) {
+    public StockResponse addStock(String name, int price) {
         // 이미 존재하는 주식인지 확인
         if (stockJpaRepository.findByStockName(name).isPresent()) {
             throw new IllegalArgumentException("이미 존재하는 주식 이름입니다: " + name);
         }
         
         Stock newStock = new Stock(name, price);
-        stockJpaRepository.save(newStock);
+        newStock = stockJpaRepository.save(newStock);
+    
+        return new StockResponse(newStock.getStockName(), newStock.getStockPrice());
     }
 
     /**

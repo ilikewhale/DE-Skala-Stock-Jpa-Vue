@@ -1,5 +1,7 @@
 package com.sk.skala.myapp.controller;
 
+import com.sk.skala.myapp.dto.request.AddStockRequest;
+import com.sk.skala.myapp.dto.response.StockResponse;
 import com.sk.skala.myapp.model.Stock;
 import com.sk.skala.myapp.service.StockService;
 import lombok.RequiredArgsConstructor;
@@ -46,14 +48,20 @@ public class StockController {
      * @param price 주식 가격
      * @return 응답 상태
      */
+    // @PostMapping
+    // public ResponseEntity<?> addStock(@RequestBody AddStockRequest addStockRequest) {
+    //     try {
+    //         stockService.addStock(name, price);
+    //         return ResponseEntity.ok().build();
+    //     } catch (IllegalArgumentException e) {
+    //         return ResponseEntity.badRequest().body(e.getMessage());
+    //     }
+    // }
+
     @PostMapping
-    public ResponseEntity<?> addStock(@RequestParam String name, @RequestParam int price) {
-        try {
-            stockService.addStock(name, price);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<StockResponse> addStock(@RequestBody AddStockRequest addStockRequest) {
+        StockResponse response = stockService.addStock(addStockRequest.getName(), addStockRequest.getPrice());
+            return ResponseEntity.ok(response);
     }
 
     /**
