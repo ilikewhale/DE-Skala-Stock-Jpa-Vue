@@ -18,6 +18,7 @@ public interface PlayerJpaRepository extends JpaRepository<Player, Long> {
      * @param playerId 플레이어 ID
      * @return Optional<Player> 플레이어 정보 (없을 경우 빈 Optional)
      */
+    //Optional: playerJpaRepository에서 player가 없을때 null을 반환해준다.
     Optional<Player> findByPlayerId(String playerId);
     
     /**

@@ -1,5 +1,7 @@
 package com.sk.skala.myapp.service;
 
+import com.sk.skala.myapp.dto.request.CreatePlayerRequest;
+import com.sk.skala.myapp.dto.response.PlayerResponse;
 import com.sk.skala.myapp.model.Player;
 import com.sk.skala.myapp.model.PlayerStock;
 import com.sk.skala.myapp.model.Stock;
@@ -13,10 +15,13 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+
+import javax.management.RuntimeErrorException;
 
 /**
  * 플레이어 관련 비즈니스 로직을 처리하는 서비스 클래스
@@ -60,17 +65,21 @@ public class PlayerService {
      * @param playerPassword
      * @return
      */
-    public Player login(String playerId, String playerPassword){
-        Optional<Player> playerOpt = playerJpaRepository.findByPlayerId(playerId);
-
-        if (playerOpt.isPresent()){
-            Player player = playerOpt.get();
-
-            if (player.getPlayerPassword() != null && player.getPlayerPassword().equals(playerPassword)){
-                return player;
-            }
+    public PlayerResponse login(String playerId, String playerPassword){
+        
+        //입력값 검증 -> if문으로 시작하면 throw new를 사용헤서 오류 메세지 보여줌
+        if (playerId == null || playerPassword == null) {
+            throw new RuntimeException("아이디와 비밀번호를 모두 입력해주세요.");
         }
-        return null;
+        
+        Player player = playerJpaRepository.findByPlayerId(playerId) //playerId가 있으면 성공
+                            .orElseThrow(()->new RuntimeException("회원이 존재하지 않습니다.")); //없으면 오류 메세지
+
+            if (!player.getPlayerPassword().equals(playerPassword)){
+                throw new RuntimeException("비밀번호가 다릅니다.");
+            }
+        
+        return new PlayerResponse(player.getPlayerId(), player.getPlayerMoney());
     }
     /**
      * 새로운 플레이어를 생성
@@ -80,16 +89,17 @@ public class PlayerService {
      * @return Player 생성된 플레이어 정보
      */
     @Transactional
-    public Player createNewPlayer(String playerId, String playerPassword, int initialMoney) {
+    public PlayerResponse createNewPlayer(String playerId, String playerPassword, int playerMoney) {
         // 이미 존재하는 플레이어 ID인지 확인
         if (playerJpaRepository.findByPlayerId(playerId).isPresent()) {
             throw new IllegalArgumentException("이미 존재하는 플레이어 ID입니다: " + playerId);
         }
         
-        Player player = new Player(playerId, playerPassword, initialMoney);
-        return playerJpaRepository.save(player);
+        Player player = new Player(playerId, playerPassword, playerMoney);
+        player = playerJpaRepository.save(player);
+    
+        return new PlayerResponse(player.getPlayerId(), player.getPlayerMoney());
     }
-
     /**
      * 플레이어가 주식을 구매
      * @param playerId 플레이어 ID

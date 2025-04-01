@@ -1,5 +1,10 @@
 package com.sk.skala.myapp.controller;
 
+import com.sk.skala.myapp.dto.request.BuyStockRequest;
+import com.sk.skala.myapp.dto.request.CreatePlayerRequest;
+import com.sk.skala.myapp.dto.request.LoginRequest;
+import com.sk.skala.myapp.dto.request.SellStockRequest;
+import com.sk.skala.myapp.dto.response.PlayerResponse;
 import com.sk.skala.myapp.model.Player;
 import com.sk.skala.myapp.service.PlayerService;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 플레이어 관련 API 엔드포인트를 제공하는 REST 컨트롤러
@@ -47,20 +51,9 @@ public class PlayerController {
      * @return 로그인 결과
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-        String playerId = loginRequest.get("playerId");
-        String playerPassword = loginRequest.get("playerPassword");
-        
-        if (playerId == null || playerPassword == null) {
-            return ResponseEntity.badRequest().body("아이디와 비밀번호를 모두 입력해주세요.");
-        }
-        
-        Player player = playerService.login(playerId, playerPassword);
-        if (player != null) {
-            return ResponseEntity.ok(player);
-        } else {
-            return ResponseEntity.badRequest().body("로그인 실패: 아이디 또는 비밀번호가 올바르지 않습니다.");
-        }
+    public ResponseEntity<PlayerResponse> login(@RequestBody LoginRequest loginRequest) {
+        PlayerResponse response = playerService.login(loginRequest.getPlayerId(), loginRequest.getPlayerPassword());
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -70,15 +63,22 @@ public class PlayerController {
      * @param playerMoney 초기 자금
      * @return 생성된 플레이어 정보
      */
+    // @PostMapping
+    // public ResponseEntity<PlayerResponse> createPlayer(@RequestBody CreatePlayerRequest createRequest) {
+    //     // try {
+    //     //     PlayerResponse response = playerService.createNewPlayer(createRequest);
+    //     //     return ResponseEntity.ok(response);
+    //     // } catch (IllegalArgumentException e) {
+    //     //     return ResponseEntity.badRequest().body(e.getMessage());
+    //     // }
+    //     PlayerResponse response = playerService.createNewPlayer(createRequest.getPlayerId(),createRequest.getPlayerPassword(),createRequest.getPlayerMoney());
+    //         return ResponseEntity.ok(response);
+    // }
     @PostMapping
-    public ResponseEntity<?> createPlayer(@RequestParam String playerId, @RequestParam String playerPassword, @RequestParam int playerMoney) {
-        try {
-            Player player = playerService.createNewPlayer(playerId, playerPassword, playerMoney);
-            return ResponseEntity.ok(player);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
+    public ResponseEntity<PlayerResponse> createPlayer(@RequestBody CreatePlayerRequest createRequest) {
+        PlayerResponse response = playerService.createNewPlayer(createRequest.getPlayerId(),createRequest.getPlayerPassword(),createRequest.getPlayerMoney());
+        return ResponseEntity.ok(response);
+    }   
 
     /**
      * 플레이어 주식 구매
@@ -88,12 +88,8 @@ public class PlayerController {
      * @return 구매 결과 메시지
      */
     @PostMapping("/{playerId}/buy")
-    public ResponseEntity<String> buyStock(
-            @PathVariable String playerId,
-            @RequestParam int stockIndex,
-            @RequestParam int quantity) {
-        
-        boolean success = playerService.buyStock(playerId, stockIndex, quantity);
+    public ResponseEntity<String> buyStock(@PathVariable("playerId") String playerId, @RequestBody BuyStockRequest buyStock) {
+        boolean success = playerService.buyStock(playerId, buyStock.getStockIndex(), buyStock.getQuantity());
         if (success) {
             return ResponseEntity.ok("주식 구매 성공");
         } else {
@@ -110,11 +106,10 @@ public class PlayerController {
      */
     @PostMapping("/{playerId}/sell")
     public ResponseEntity<String> sellStock(
-            @PathVariable String playerId,
-            @RequestParam int stockIndex,
-            @RequestParam int quantity) {
+            @PathVariable("playerId") String playerId,
+            @RequestBody SellStockRequest sellStock) {
         
-        boolean success = playerService.sellStock(playerId, stockIndex, quantity);
+        boolean success = playerService.sellStock(playerId, sellStock.getStockIndex(), sellStock.getQuantity());
         if (success) {
             return ResponseEntity.ok("주식 판매 성공");
         } else {
